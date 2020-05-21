@@ -18,7 +18,7 @@ function App() {
   let sizeList = [];
   
   // ROS API to get list of services
-  ros.getServices(
+  const get = () => ros.getServices(
     // Success, callback
     function(services) {
       // Get dynamic_reconfigurable nodes
@@ -113,15 +113,17 @@ function App() {
       console.log('Failed to get services : ' + services)
     }
   );
+
+  get();
+
   
+  const param = new ROSLIB.Param({
+    ros: ros,
+    name: 'amplitude'
+  });
   // 테스트 코드 0
   const onClick0 = () => {
-    const param = new ROSLIB.Param({
-      ros: ros,
-      name: 'amplitude'
-    });
-
-    param.set(0, (args)=>{console.log(args)});
+    param.set(4, (service)=>{console.log(service)});
   };
 
   // 테스트 코드 1
@@ -135,6 +137,7 @@ function App() {
       <p>ㅋ</p>
       <button onClick={onClick0}>눌러봐:: param.set</button>
       <button onClick={onClick1}>눌러봐:: ros.setStatusLevel</button>
+      <button onClick={get}>다시 getServices</button>
     </div>
   );
 }
