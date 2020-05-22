@@ -93,12 +93,12 @@ function App() {
     console.log('Failed to get services : ' + services);
   };
 
-  // ros.getServices(
-  //   (services) => resolve(services),
-  //   (services) => failed(services),
-  // );
+  ros.getServices(
+    (services) => resolve(services),
+    (services) => failed(services),
+  );
 
-  console.log(ros.getServices((services) => resolve(services)));
+  // console.log(ros.getServices((services) => resolve(services)));
 
   return (
     <div className="App">
