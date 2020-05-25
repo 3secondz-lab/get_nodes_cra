@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import ROSLIB from 'roslib';
 import YAML from 'yamljs';
 import _ from 'lodash';
+import styled from 'styled-components';
 
 function Run() {
   const [nodes, setNodes] = useState([
@@ -10,6 +11,11 @@ function Run() {
       List: [],
     },
   ]);
+
+  const [contentList, setContentList] = useState(nodes);
+  const [item, setItem] = useState([]);
+  const [itemValue, setItemValue] = useState({});
+
   useEffect(() => {
     const ros = new ROSLIB.Ros({
       url: 'ws://localhost:9090',
@@ -104,18 +110,59 @@ function Run() {
     );
   }, []);
 
+  // nodes.forEach((v, i, t) => {
+  //   console.log(v);
+  // });
+
+  // 이벤트(onDrag 혹은 onChange 등) 발생했을 때 해당 값을 넘기는 함수들을 만들어야 함.
+  const change = (e) => {
+    console.log(e.target.value);
+  };
+
+  console.log(nodes);
+
   return (
-    <>
-      {nodes.map((v, i, t) => (
-        <dl key={i}>
-          <dt>{v.Node}</dt>
-          {v.List.map((v, i, t) => (
-            <dd key={i}>{v.Name}</dd>
+    <Wrapper>
+      <div className="sidebar">
+        <ul>
+          {nodes.map((v, i, t) => (
+            <li
+              key={i}
+              onClick={() => {
+                setContentList(t);
+                setItem(v.List);
+              }}
+            >
+              {v.Node}
+            </li>
           ))}
-        </dl>
-      ))}
-    </>
+        </ul>
+      </div>
+      <div className="show-content">
+        {contentList.map((v, i) => (
+          <div key={i}>
+            <h1>{v.Node}</h1>
+            {item.map((v, i) => (
+              <p key={i}>
+                {v.Name}
+                {v.Type === 'str' && <input type="text" defaultValue={v.Default} />}
+                {v.Type === 'double' && (
+                  <>
+                    <span>{v.Min}</span>
+                    <input type="range" name={v.Name} value={v.Default} min={v.Min} max={v.Max} onChange={change} />
+                    <span>{v.Max}</span>
+                    <input type="number" name={v.Name} step="0.1" value={v.Default} onChange={change} />
+                  </>
+                )}
+              </p>
+            ))}
+          </div>
+        ))}
+      </div>
+    </Wrapper>
   );
 }
+
+const Wrapper = styled.div``;
 
 export default Run;
