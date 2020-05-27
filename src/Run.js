@@ -38,12 +38,10 @@ function Run() {
           messageType: 'dynamic_reconfigure/ConfigDescription',
         });
         sub.subscribe(function (message) {
-          // console.log(message.groups.length);
           apiForm.Node = name;
 
           message.groups[0].parameters.forEach(function (item, index, array) {
             const { name, type, level, description, edit_method } = item;
-            //console.log(`Name : ${name} , Type :  ${type}, Level :  ${level}, Desc : ${description}`);
             listObj.Name = name;
             listObj.Type = type;
             listObj.Level = level;
@@ -62,7 +60,6 @@ function Run() {
               listObj = {};
               enum_val.forEach(function (item, index, array) {
                 const { name, type, value, description } = item;
-                //console.log('Name : ' + name + ', Type : ' + type + ', Value : ' + value + ', Desc : ' + description)
                 listObj.Name = name;
                 listObj.Type = type;
                 listObj.Value = value;
@@ -83,7 +80,6 @@ function Run() {
               if (val_min == null) {
                 val_min = -Infinity;
               }
-              //console.log('Max : ' + val_max + ', Min : ' + val_min + ', Default : ' + val_dflt)
               listObj.Max = val_max;
               listObj.Min = val_min;
               listObj.Default = val_dflt;
@@ -109,14 +105,17 @@ function Run() {
     );
   }, []);
 
-  // 이벤트(onDrag 혹은 onChange 등) 발생했을 때 해당 값을 넘기는 함수들을 만들어야 함.
   const change = (e) => {
     const idx = e.target.getAttribute('data-idx');
     const regExp = /^[0-9]*$/;
     let newData = [...item];
     newData[idx].Default = regExp.test(e.target.value) ? Number(e.target.value) : e.target.value;
-    setItem(newData);
+    setItem(newData); // ui를 변화하기 위한 로직은 여기서 끝.
+
+    // ros api 에 전달하는 코드는 여기서부터 시작.
   };
+
+  console.log(nodes);
 
   return (
     <Wrapper>
@@ -150,6 +149,24 @@ function Run() {
                     <span>{v.Max}</span>
                     <input type="number" name={v.Name} data-idx={i} step="0.1" value={v.Default} onChange={change} />
                   </>
+                )}
+                {v.Type === 'bool' && <input type="checkbox" name={v.Name} data-idx={i} checked={v.Default} onChange={change} />}
+                {v.Type === 'int' && !v.Em && (
+                  <>
+                    <span>{v.Min}</span>
+                    <input type="range" name={v.Name} data-idx={i} value={v.Default} min={v.Min} max={v.Max} onChange={change} />
+                    <span>{v.Max}</span>
+                    <input type="number" name={v.Name} data-idx={i} step="1" value={v.Default} onChange={change} />
+                  </>
+                )}
+                {v.Type === 'int' && v.Em && (
+                  <select>
+                    {v.sizeList.map((v, i) => (
+                      <option key={i}>
+                        {v.Name} ({v.Value})
+                      </option>
+                    ))}
+                  </select>
                 )}
               </p>
             ))}
