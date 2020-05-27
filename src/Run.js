@@ -3,6 +3,7 @@ import ROSLIB from 'roslib';
 import YAML from 'yamljs';
 import _ from 'lodash';
 import styled from 'styled-components';
+import './reset.scss';
 
 function Run() {
   const [nodes, setNodes] = useState([
@@ -177,6 +178,23 @@ function Run() {
   );
 }
 
-const Wrapper = styled.div``;
+const Wrapper = styled.div`
+  display: flex;
+  width: 90%;
+  height: auto;
+  min-height: 50vh;
+  flex-direction: row;
+  place-content: flex-start;
+  justify-content: flex-start;
+  align-items: stretch;
+  margin: 0 auto;
+  border: 1px solid #f60;
+  .sidebar {
+    width: 30%;
+  }
+  .show-content {
+    width: 70%;
+  }
+`;
 
 export default Run;
