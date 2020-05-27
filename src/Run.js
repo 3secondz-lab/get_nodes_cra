@@ -14,7 +14,6 @@ function Run() {
 
   const [contentList, setContentList] = useState(nodes);
   const [item, setItem] = useState([]);
-  const [itemValue, setItemValue] = useState({});
 
   useEffect(() => {
     const ros = new ROSLIB.Ros({
@@ -110,16 +109,14 @@ function Run() {
     );
   }, []);
 
-  // nodes.forEach((v, i, t) => {
-  //   console.log(v);
-  // });
-
   // 이벤트(onDrag 혹은 onChange 등) 발생했을 때 해당 값을 넘기는 함수들을 만들어야 함.
   const change = (e) => {
-    console.log(e.target.value);
+    const idx = e.target.getAttribute('data-idx');
+    const regExp = /^[0-9]*$/;
+    let newData = [...item];
+    newData[idx].Default = regExp.test(e.target.value) ? Number(e.target.value) : e.target.value;
+    setItem(newData);
   };
-
-  console.log(nodes);
 
   return (
     <Wrapper>
@@ -145,13 +142,13 @@ function Run() {
             {item.map((v, i) => (
               <p key={i}>
                 {v.Name}
-                {v.Type === 'str' && <input type="text" defaultValue={v.Default} />}
+                {v.Type === 'str' && <input type="text" name={v.Name} data-idx={i} value={v.Default} onChange={change} />}
                 {v.Type === 'double' && (
                   <>
                     <span>{v.Min}</span>
-                    <input type="range" name={v.Name} value={v.Default} min={v.Min} max={v.Max} onChange={change} />
+                    <input type="range" name={v.Name} data-idx={i} value={v.Default} min={v.Min} max={v.Max} onChange={change} />
                     <span>{v.Max}</span>
-                    <input type="number" name={v.Name} step="0.1" value={v.Default} onChange={change} />
+                    <input type="number" name={v.Name} data-idx={i} step="0.1" value={v.Default} onChange={change} />
                   </>
                 )}
               </p>
