@@ -5,21 +5,25 @@ import _ from 'lodash';
 import styled from 'styled-components';
 import './reset.scss';
 
+const ros = new ROSLIB.Ros({
+  url: 'ws://localhost:9090',
+});
+
 function Run() {
   const [nodes, setNodes] = useState([
     {
-      Name: '',
+      Node: '',
       List: [],
     },
   ]);
 
-  const [contentList, setContentList] = useState(nodes);
+  const [serverName, setServerName] = useState('');
   const [item, setItem] = useState([]);
 
   useEffect(() => {
-    const ros = new ROSLIB.Ros({
-      url: 'ws://localhost:9090',
-    });
+    // const ros = new ROSLIB.Ros({
+    //   url: 'ws://localhost:9090',
+    // });
 
     const resolve = (services) => {
       let apiForm = {
@@ -106,15 +110,46 @@ function Run() {
     );
   }, []);
 
+  const runRosapi = (type, name, value) => {
+    console.log(serverName);
+    const configData = new ROSLIB.Message({
+      [`${type}s`]: [{ name, value }],
+    });
+
+    // const ros = new ROSLIB.Ros({
+    //   url: 'ws://localhost:9090',
+    // });
+
+    const configReq = new ROSLIB.ServiceRequest({
+      config: configData,
+    });
+
+    const configService = new ROSLIB.Service({
+      ros: ros,
+      name: `${serverName}/set_parameters`,
+      serviceType: 'dynamic_reconfigure/Reconfigure',
+    });
+
+    configService.callService(configReq, (result) => {
+      console.log(result);
+    });
+  };
+
   const change = (e) => {
-    console.log(e.target.value);
-    const idx = e.target.getAttribute('data-idx');
     const regExp = /^[0-9]*$/;
+    const idx = e.target.getAttribute('data-idx');
+    const dataType = e.target.getAttribute('data-type');
+    const dataEm = e.target.getAttribute('data-em');
+    const dataName = e.target.name;
+    const dataValue = e.target.type === 'checkbox' ? e.target.checked : regExp.test(e.target.value) ? Number(e.target.value) : e.target.value;
     let newData = [...item];
-    newData[idx].Default = e.target.type === 'checkbox' ? e.target.checked : regExp.test(e.target.value) ? Number(e.target.value) : e.target.value;
+    if (!dataEm) {
+      newData[idx].Default = dataValue;
+    }
     setItem(newData); // ui를 변화하기 위한 로직은 여기서 끝.
 
     // ros api 에 전달하는 코드는 여기서부터 시작.
+    runRosapi(dataType, dataName, dataValue);
   };
 
   console.log(nodes);
@@ -127,7 +162,7 @@ function Run() {
             <li
               key={i}
               onClick={() => {
-                setContentList(t);
+                setServerName(`/${v.Node.split('/')[1]}`);
                 setItem(v.List);
               }}
             >
@@ -137,49 +172,45 @@ function Run() {
         </ul>
       </div>
       <div className="show-content">
-        {contentList.map((v, i) => (
-          <div key={i}>
-            <h1>{v.Node}</h1>
-            <ul>
-              {item.map((v, i) => (
-                <li key={i}>
-                  <dl>
-                    <dt>{v.Name}</dt>
-                    <dd>
-                      {v.Type === 'str' && <input type="text" name={v.Name} data-idx={i} value={v.Default} onChange={change} />}
-                      {v.Type === 'double' && (
-                        <p className="wrap-item">
-                          <span>{v.Min}</span>
-                          <input type="range" name={v.Name} data-idx={i} data-type={v.Type} value={v.Default} min={v.Min} max={v.Max} onChange={change} />
-                          <span>{v.Max}</span>
-                          <input type="number" name={v.Name} data-idx={i} data-type={v.Type} step="0.1" value={v.Default} onChange={change} />
-                        </p>
-                      )}
-                      {v.Type === 'bool' && <input type="checkbox" name={v.Name} data-idx={i} checked={v.Default} onChange={change} />}
-                      {v.Type === 'int' && !v.Em && (
-                        <p className="wrap-item">
-                          <span>{v.Min}</span>
-                          <input type="range" name={v.Name} data-idx={i} data-type={v.Type} value={v.Default} min={v.Min} max={v.Max} onChange={change} />
-                          <span>{v.Max}</span>
-                          <input type="number" name={v.Name} data-idx={i} data-type={v.Type} step="1" value={v.Default} onChange={change} />
-                        </p>
-                      )}
-                      {v.Type === 'int' && v.Em && (
-                        <select>
-                          {v.sizeList.map((v, i) => (
-                            <option key={i}>
-                              {v.Name} ({v.Value})
-                            </option>
-                          ))}
-                        </select>
-                      )}
-                    </dd>
-                  </dl>
-                </li>
-              ))}
-            </ul>
-          </div>
-        ))}
+        <h1>{serverName}</h1>
+        <ul>
+          {item.map((v, i) => (
+            <li key={i}>
+              <dl>
+                <dt>{v.Name}</dt>
+                <dd>
+                  {v.Type === 'str' && <input type="text" name={v.Name} data-idx={i} data-type={v.Type} value={v.Default} onChange={change} />}
+                  {v.Type === 'double' && (
+                    <p className="wrap-item">
+                      <span>{v.Min}</span>
+                      <input type="range" name={v.Name} data-idx={i} data-type={v.Type} value={v.Default} min={v.Min} max={v.Max} onChange={change} />
+                      <span>{v.Max}</span>
+                      <input type="number" name={v.Name} data-idx={i} data-type={v.Type} step="0.1" value={v.Default} onChange={change} />
+                    </p>
+                  )}
+                  {v.Type === 'bool' && <input type="checkbox" data-type={v.Type} name={v.Name} data-idx={i} checked={v.Default} onChange={change} />}
+                  {v.Type === 'int' && !v.Em && (
+                    <p className="wrap-item">
+                      <span>{v.Min}</span>
+                      <input type="range" name={v.Name} data-idx={i} data-type={v.Type} value={v.Default} min={v.Min} max={v.Max} onChange={change} />
+                      <span>{v.Max}</span>
+                      <input type="number" name={v.Name} data-idx={i} data-type={v.Type} step="1" value={v.Default} onChange={change} />
+                    </p>
+                  )}
+                  {v.Type === 'int' && v.Em && (
+                    <select onChange={change} data-type={v.Type} name={v.Name} data-em={true}>
+                      {v.sizeList.map((v, i) => (
+                        <option key={i} value={v.Value}>
+                          {v.Name} ({v.Value})
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                </dd>
+              </dl>
+            </li>
+          ))}
+        </ul>
       </div>
     </Wrapper>
   );
