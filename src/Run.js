@@ -107,10 +107,11 @@ function Run() {
   }, []);
 
   const change = (e) => {
+    console.log(e.target.value);
     const idx = e.target.getAttribute('data-idx');
     const regExp = /^[0-9]*$/;
     let newData = [...item];
-    newData[idx].Default = regExp.test(e.target.value) ? Number(e.target.value) : e.target.value;
+    newData[idx].Default = e.target.type === 'checkbox' ? e.target.checked : regExp.test(e.target.value) ? Number(e.target.value) : e.target.value;
     setItem(newData); // ui를 변화하기 위한 로직은 여기서 끝.
 
     // ros api 에 전달하는 코드는 여기서부터 시작.
@@ -139,38 +140,44 @@ function Run() {
         {contentList.map((v, i) => (
           <div key={i}>
             <h1>{v.Node}</h1>
-            {item.map((v, i) => (
-              <p key={i}>
-                {v.Name}
-                {v.Type === 'str' && <input type="text" name={v.Name} data-idx={i} value={v.Default} onChange={change} />}
-                {v.Type === 'double' && (
-                  <>
-                    <span>{v.Min}</span>
-                    <input type="range" name={v.Name} data-idx={i} value={v.Default} min={v.Min} max={v.Max} onChange={change} />
-                    <span>{v.Max}</span>
-                    <input type="number" name={v.Name} data-idx={i} step="0.1" value={v.Default} onChange={change} />
-                  </>
-                )}
-                {v.Type === 'bool' && <input type="checkbox" name={v.Name} data-idx={i} checked={v.Default} onChange={change} />}
-                {v.Type === 'int' && !v.Em && (
-                  <>
-                    <span>{v.Min}</span>
-                    <input type="range" name={v.Name} data-idx={i} value={v.Default} min={v.Min} max={v.Max} onChange={change} />
-                    <span>{v.Max}</span>
-                    <input type="number" name={v.Name} data-idx={i} step="1" value={v.Default} onChange={change} />
-                  </>
-                )}
-                {v.Type === 'int' && v.Em && (
-                  <select>
-                    {v.sizeList.map((v, i) => (
-                      <option key={i}>
-                        {v.Name} ({v.Value})
-                      </option>
-                    ))}
-                  </select>
-                )}
-              </p>
-            ))}
+            <ul>
+              {item.map((v, i) => (
+                <li key={i}>
+                  <dl>
+                    <dt>{v.Name}</dt>
+                    <dd>
+                      {v.Type === 'str' && <input type="text" name={v.Name} data-idx={i} value={v.Default} onChange={change} />}
+                      {v.Type === 'double' && (
+                        <p className="wrap-item">
+                          <span>{v.Min}</span>
+                          <input type="range" name={v.Name} data-idx={i} data-type={v.Type} value={v.Default} min={v.Min} max={v.Max} onChange={change} />
+                          <span>{v.Max}</span>
+                          <input type="number" name={v.Name} data-idx={i} data-type={v.Type} step="0.1" value={v.Default} onChange={change} />
+                        </p>
+                      )}
+                      {v.Type === 'bool' && <input type="checkbox" name={v.Name} data-idx={i} checked={v.Default} onChange={change} />}
+                      {v.Type === 'int' && !v.Em && (
+                        <p className="wrap-item">
+                          <span>{v.Min}</span>
+                          <input type="range" name={v.Name} data-idx={i} data-type={v.Type} value={v.Default} min={v.Min} max={v.Max} onChange={change} />
+                          <span>{v.Max}</span>
+                          <input type="number" name={v.Name} data-idx={i} data-type={v.Type} step="1" value={v.Default} onChange={change} />
+                        </p>
+                      )}
+                      {v.Type === 'int' && v.Em && (
+                        <select>
+                          {v.sizeList.map((v, i) => (
+                            <option key={i}>
+                              {v.Name} ({v.Value})
+                            </option>
+                          ))}
+                        </select>
+                      )}
+                    </dd>
+                  </dl>
+                </li>
+              ))}
+            </ul>
           </div>
         ))}
       </div>
@@ -179,6 +186,7 @@ function Run() {
 }
 
 const Wrapper = styled.div`
+  padding: 1.5rem;
   display: flex;
   width: 90%;
   height: auto;
@@ -191,9 +199,69 @@ const Wrapper = styled.div`
   border: 1px solid #f60;
   .sidebar {
     width: 30%;
+    ul {
+      width: 100%;
+      overflow: hidden;
+      li {
+        width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        cursor: pointer;
+        font-size: 2rem;
+      }
+    }
   }
   .show-content {
     width: 70%;
+    input[type='text'],
+    input[type='number'] {
+      border: 1px solid #000;
+    }
+    h1 {
+      text-align: center;
+      margin: 0 0 4rem 0;
+    }
+    dl {
+      display: flex;
+      flex-direction: row;
+      justify-content: flex-start;
+      align-content: center;
+      margin: 0 0 2rem 0;
+      dt {
+        flex: 1 0 25%;
+        font-size: 1.6rem;
+      }
+      dd {
+        flex: 0 0 75%;
+        width: 100%;
+        .wrap-item {
+          width: 100%;
+          display: flex;
+          flex-direction: row;
+          justify-content: flex-start;
+          align-content: center;
+          span {
+            width: 15%;
+            font-size: 1.4rem;
+            text-align: center;
+          }
+          input[type='number'] {
+            width: 20%;
+            align-self: flex-end;
+            margin-left: auto;
+            margin-right: 2rem;
+          }
+          input[type='range'] {
+            cursor: pointer;
+          }
+        }
+        select {
+          border: 1px solid #000;
+          cursor: pointer;
+        }
+      }
+    }
   }
 `;
 
