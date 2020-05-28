@@ -21,10 +21,6 @@ function Run() {
   const [item, setItem] = useState([]);
 
   useEffect(() => {
-    // const ros = new ROSLIB.Ros({
-    //   url: 'ws://localhost:9090',
-    // });
-
     const resolve = (services) => {
       let apiForm = {
         Node: '',
@@ -111,32 +107,35 @@ function Run() {
   }, []);
 
   const runRosapi = (type, name, value) => {
-    console.log(serverName);
     const configData = new ROSLIB.Message({
       [`${type}s`]: [{ name, value }],
     });
-
-    // const ros = new ROSLIB.Ros({
-    //   url: 'ws://localhost:9090',
-    // });
 
     const configReq = new ROSLIB.ServiceRequest({
       config: configData,
     });
 
     const configService = new ROSLIB.Service({
-      ros: ros,
+      ros,
       name: `${serverName}/set_parameters`,
       serviceType: 'dynamic_reconfigure/Reconfigure',
     });
 
-    configService.callService(configReq, (result) => {
-      console.log(result);
-    });
+    configService.callService(
+      configReq,
+      (result) => {
+        console.log(result);
+      },
+      (result) => {
+        alert('Failed to reconfigure');
+        console.log(result);
+      },
+    );
   };
 
   const change = (e) => {
-    const regExp = /^[0-9]*$/;
+    // const regExp = /^[0-9]*$/;
+    const regExp = /^\d+(?:[.]\d+)?$/;
     const idx = e.target.getAttribute('data-idx');
     const dataType = e.target.getAttribute('data-type');
     const dataEm = e.target.getAttribute('data-em');
@@ -152,7 +151,7 @@ function Run() {
     runRosapi(dataType, dataName, dataValue);
   };
 
-  console.log(nodes);
+  // console.log(nodes);
 
   return (
     <Wrapper>
