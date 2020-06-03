@@ -32,16 +32,16 @@ function Run() {
 
       var list_serv = services.filter((serv) => serv.endsWith('/set_parameters'));
       list_serv.forEach(function (item, index, array) {
-        var name = item.substring(0, item.length - '/set_parameters'.length) + '/parameter_descriptions';
+        var nodeName = item.substring(0, item.length - '/set_parameters'.length) + '/parameter_descriptions';
         var sub = new ROSLIB.Topic({
           ros: ros,
-          name: name,
+          name: nodeName,
           messageType: 'dynamic_reconfigure/ConfigDescription',
         });
-        sub.subscribe(function (message) {
-          apiForm.Node = name;
 
+        sub.subscribe(function (message) {
           message.groups[0].parameters.forEach(function (item, index, array) {
+            listObj = {};
             const { name, type, level, description, edit_method } = item;
             listObj.Name = name;
             listObj.Type = type;
@@ -68,6 +68,7 @@ function Run() {
                 sizeList.push(listObj);
                 _.find(apiForm.List, (o) => o.Em === true).sizeList = sizeList;
                 listObj = {};
+                sizeList = [];
               });
             } else {
               // For other types
@@ -89,8 +90,13 @@ function Run() {
             }
             sizeList = [];
           });
-          sub.unsubscribe();
+          apiForm.Node = nodeName;
           apiList.push(apiForm);
+          apiForm = {
+            Node: '',
+            List: [],
+          };
+          sub.unsubscribe();
           setNodes(apiList);
         });
       });
